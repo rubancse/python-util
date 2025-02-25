@@ -26,3 +26,9 @@ AssetIQ: Asset Intelligence
 ScanLens: Implies a focused view on scan coverage.
 Vulnerability Coverage Management (VCM): A more formal and technical name.
 Security Scan Coverage Optimizer (SSCO): Focuses on optimizing scan coverage.
+ScanIQ: Combines scanning with intelligence.
+VulnMap: Short for Vulnerability Map.
+AssetScan: Simple and direct, focusing on asset scanning.
+ScanWise: Implies intelligent scanning and insights.
+ThreatLens: Suggests a focused view on threats.
+CyberSight: Conveys enhanced vision into cybersecurity.
