@@ -23,3 +23,6 @@ CyberOps: Short for Cyber Operations.
 SecIQ: Security Intelligence
 VulnIQ: Vulnerability Intelligence
 AssetIQ: Asset Intelligence
+ScanLens: Implies a focused view on scan coverage.
+Vulnerability Coverage Management (VCM): A more formal and technical name.
+Security Scan Coverage Optimizer (SSCO): Focuses on optimizing scan coverage.
