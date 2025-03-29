@@ -25,6 +25,54 @@ curl -n -X GET \
 
 
 
+import boto3
+import json
+import requests
+import os
+
+def lambda_handler(event, context):
+    # Databricks instance details and job configuration
+    databricks_host = os.environ['DATABRICKS_HOST']
+    databricks_token = os.environ['DATABRICKS_TOKEN']
+    job_id = os.environ['DATABRICKS_JOB_ID']
+
+    # API endpoint for running Databricks job
+    api_version = '/api/2.1'
+    api_command = '/jobs/run-now'
+    url = f"https://{databricks_host}{api_version}{api_command}"
+
+    # Request headers
+    headers = {
+        "Authorization": f"Bearer {databricks_token}",
+        "Content-Type": "application/json"
+    }
+
+    # Request payload
+    data = json.dumps({"job_id": job_id})
+
+    try:
+        # Make the API request
+        response = requests.post(url, headers=headers, data=data)
+        response.raise_for_status()  # Raise HTTPError for bad responses (4xx or 5xx)
+        return {
+            'statusCode': 200,
+            'body': json.dumps({
+                'message': 'Databricks job triggered successfully',
+                'response': response.json()
+            })
+        }
+    except requests.exceptions.RequestException as e:
+        return {
+            'statusCode': 500,
+            'body': json.dumps({
+                'message': 'Failed to trigger Databricks job',
+                'error': str(e),
+                'response': response.text
+            })
+        }
+
+
+
 ```python
 import boto3
 import json
