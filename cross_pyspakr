@@ -1,0 +1,61 @@
+from pyspark.sql import SparkSession
+import boto3
+import json
+
+def get_secret(secret_name, region_name, role_arn):
+    """
+    Retrieves a secret from AWS Secrets Manager using a cross-account IAM role.
+    """
+    try:
+        # 1. Create an STS client to assume the role.
+        sts_client = boto3.client('sts')
+
+        # 2. Assume the role.
+        assumed_role_object = sts_client.assume_role(
+            RoleArn=role_arn,
+            RoleSessionName="AssumeRoleSession1"
+        )
+        credentials = assumed_role_object['Credentials']
+
+        # 3. Create a Secrets Manager client using the assumed role's credentials.
+        secrets_client = boto3.client(
+            service_name='secretsmanager',
+            region_name=region_name,
+            aws_access_key_id=credentials['AccessKeyId'],
+            aws_secret_access_key=credentials['SecretAccessKey'],
+            aws_session_token=credentials['SessionToken']
+        )
+
+        # 4. Retrieve the secret.
+        get_secret_value_response = secrets_client.get_secret_value(SecretId=secret_name)
+
+        if 'SecretString' in get_secret_value_response:
+            secret = get_secret_value_response['SecretString']
+            return json.loads(secret)
+        else:
+            return get_secret_value_response['SecretBinary']
+
+    except Exception as e:
+        print(f"Error retrieving secret: {e}")
+        return None
+
+def main():
+    spark = SparkSession.builder.appName("SecretsManagerExample").getOrCreate()
+
+    secret_name = "my-secret"
+    region_name = "us-east-1"
+    role_arn = "arn:aws:iam::<cross_account_id>:role/<role_name>"
+
+    secret_data = get_secret(secret_name, region_name, role_arn)
+
+    if secret_data:
+        print("Secret retrieved successfully:")
+        print(secret_data)
+        secret_rdd = spark.sparkContext.parallelize([secret_data])
+        secret_df = spark.read.json(secret_rdd)
+        secret_df.show()
+
+    spark.stop()
+
+if __name__ == "__main__":
+    main()
