@@ -1,0 +1,66 @@
+import boto3
+
+def get_secrets_manager_client(credentials, region_name):
+    """
+    Initializes a Secrets Manager client using temporary credentials.
+
+    Args:
+        credentials (dict): The Credentials dictionary from sts.assume_role().
+        region_name (str): The AWS region.
+
+    Returns:
+        boto3.client: A Secrets Manager client.
+    """
+    secrets_client = boto3.client(
+        service_name='secretsmanager',
+        region_name=region_name,
+        aws_access_key_id=credentials['AccessKeyId'],
+        aws_secret_access_key=credentials['SecretAccessKey'],
+        aws_session_token=credentials['SessionToken']
+    )
+    return secrets_client
+
+def assume_role_and_get_credentials(role_arn):
+    """
+    Assumes an IAM role and returns the Credentials dictionary.
+
+    Args:
+        role_arn (str): The ARN of the IAM role to assume.
+
+    Returns:
+        dict: The Credentials dictionary.
+    """
+    try:
+        sts_client = boto3.client('sts')
+        assumed_role_object = sts_client.assume_role(
+            RoleArn=role_arn,
+            RoleSessionName="AssumeRoleSession1"
+        )
+        return assumed_role_object['Credentials']
+    except Exception as e:
+        print(f"Error assuming role: {e}")
+        return None
+
+# Example Usage
+role_arn = "arn:aws:iam::<your_account_id>:role/<your_role_name>"  # Replace with your role ARN
+region_name = "us-east-1"
+
+credentials = assume_role_and_get_credentials(role_arn)
+
+if credentials:
+    secrets_client = get_secrets_manager_client(credentials, region_name)
+
+    # Now you can use the secrets_client to retrieve secrets
+    try:
+        secret_value_response = secrets_client.get_secret_value(SecretId="my-secret")
+        # process the secret value here.
+        if 'SecretString' in secret_value_response:
+            secret = secret_value_response['SecretString']
+            print(secret)
+        else:
+            print(secret_value_response['SecretBinary'])
+
+    except Exception as e:
+        print(f"Error retrieving secret: {e}")
+else:
+    print("Failed to get credentials.")
